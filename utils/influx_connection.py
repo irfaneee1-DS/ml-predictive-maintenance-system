@@ -22,16 +22,14 @@ def _get_config(key, default=None):
 
 
 HOST = _get_config("INFLUXDB_HOST", "http://localhost:8181")
-
 DATABASE = _get_config("INFLUXDB_DATABASE", "dissertation")
 
-TOKEN = _get_config("INFLUXDB_TOKEN")
+# Support the current deployment secret name and the older local name.
+TOKEN = _get_config("INFLUXDB_TOKEN") or _get_config("DB_TOKEN")
 
-client = InfluxDBClient3(
-    host=HOST,
-    token=TOKEN,
-    database=DATABASE
-)
+# The client is created only when a token is available.
+# This allows the CSV fallback to work when InfluxDB is unavailable.
+client = None
 
 
 # -----------------------------------
@@ -43,6 +41,15 @@ client = InfluxDBClient3(
 # export so the page still has something real to show.
 
 def _get_latest_from_influxdb():
+    global client
+     if not TOKEN:
+        raise RuntimeError("InfluxDB token is not configured")
+     if client is None:
+        client = InfluxDBClient3(
+            host=HOST,
+            token=TOKEN,
+            database=DATABASE
+        ) 
 
     query = """
     SELECT *
