@@ -42,14 +42,17 @@ client = None
 
 def _get_latest_from_influxdb():
     global client
-     if not TOKEN:
-        raise RuntimeError("InfluxDB token is not configured")
-     if client is None:
+
+    if not TOKEN:
+        raise RuntimeError("InfluxDB Token is not configured")
+        
+    if client is None:
         client = InfluxDBClient3(
-            host=HOST,
-            token=TOKEN,
-            database=DATABASE
-        ) 
+            host = HOST,
+            token = TOKEN,
+            database = DATABASE
+        )
+    
 
     query = """
     SELECT *
