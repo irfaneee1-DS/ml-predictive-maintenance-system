@@ -4,17 +4,17 @@ from utils.influx_connection import get_latest_sensor_data
 
 # Page Configuration
 st.set_page_config(
-    page_title="Live Monitoring",
+    page_title="Prototype Monitoring Interface",
     page_icon="📈",
     layout="wide"
 )
 
 # Page Title
-st.title("📈 Live Bearing Monitoring")
+st.title("📈 Prototype Monitoring Interface")
 
 st.markdown(
 """
-Real-time vibration monitoring dashboard powered by InfluxDB 3.
+Prototype vibration monitoring interface powered by InfluxDB 3.
 """
 )
 
