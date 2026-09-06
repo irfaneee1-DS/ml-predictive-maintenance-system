@@ -5,7 +5,7 @@ Machine Learning based Predictive Maintenance portal built with Streamlit. Predi
 ## Pages
 
 - **Home** — executive dashboard / system status
-- **Live Monitoring** — latest sensor reading from InfluxDB
+- **Prototype Monitoring Interface** — latest sensor reading from InfluxDB
 - **Machine Learning Prediction** — runs the Random Forest model and logs a prediction
 - **Maintenance Work Orders** — auto-generated work order for the latest fault
 - **Inventory Management** — spare bearing stock levels
