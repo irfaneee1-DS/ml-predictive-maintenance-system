@@ -67,6 +67,7 @@ def _get_latest_from_influxdb():
     df = table.to_pandas()
 
     latest = df.iloc[0]
+    st.write("DEBUG: InfluxDB query successful")
 
     return {
         "Mean": latest["Mean"],
@@ -149,5 +150,5 @@ def get_latest_sensor_data():
     try:
         return _get_latest_from_influxdb()
 
-    except Exception:
+    except Exception as e:
         return _get_latest_from_csv()
