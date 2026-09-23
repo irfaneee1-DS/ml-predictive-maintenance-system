@@ -1,13 +1,3 @@
-from pathlib import Path
-import joblib
-import pandas as pd
-
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-MODEL_PATH = BASE_DIR / "models" / "random_forest_model.pkl"
-
-model = joblib.load(MODEL_PATH)
-
 # ============================================
 # 23-Feature Random Forest Prediction Utility
 # ============================================
