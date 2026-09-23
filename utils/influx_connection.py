@@ -50,8 +50,3 @@ def _get_latest_from_influxdb():
         "Label": latest["Label"],
         "Time": latest["time"]
     }
-def get_latest_sensor_data():
-    try:
-        return _get_latest_from_influxdb()
-    except Exception:
-        return _get_latest_from_csv()
