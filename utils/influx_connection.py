@@ -147,9 +147,11 @@ def _get_latest_from_csv():
 
 def get_latest_sensor_data():
 
+    if not TOKEN:
+        return _get_latest_from_csv()
+
     try:
         return _get_latest_from_influxdb()
 
-    except Exception as e:
-        st.error(f"InfluxDB error: {type(e).__name__}: {e}")
+    except Exception:
         return _get_latest_from_csv()
