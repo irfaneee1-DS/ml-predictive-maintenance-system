@@ -1,9 +1,4 @@
-# -----------------------------------
-# Get Latest Sensor Features
-# -----------------------------------
-
 def _get_latest_from_influxdb():
-
     global client
 
     if not TOKEN:
@@ -24,16 +19,10 @@ def _get_latest_from_influxdb():
     """
 
     table = client.query(query=query)
-
     df = table.to_pandas()
 
     latest = df.iloc[0]
 
-    sensor_data = latest.to_dict()
-
-    sensor_data["Time"] = latest["time"]
-
-    return sensor_data
     return {
         "Mean": latest["Mean"],
         "RMS": latest["RMS"],
