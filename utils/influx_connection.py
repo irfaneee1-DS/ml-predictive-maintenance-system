@@ -137,7 +137,7 @@ def _get_latest_from_csv():
         "Wavelet_D3": latest["Wavelet_D3"],
         "Wavelet_D4": latest["Wavelet_D4"],
         "Label": latest["Label"],
-        #time = latest.get("Time", "CSV fallback")
+        "Time": latest["Time"],
         "Source": "CSV fallback"
     }
 
