@@ -105,6 +105,9 @@ def _get_latest_from_csv():
 
     df = pd.read_csv(CSV_FALLBACK_PATH)
 
+    # Remove accidental whitespace from column names
+    df.columns = df.columns.str.strip()
+
     latest = df.iloc[-1]
 
     return {
@@ -133,7 +136,6 @@ def _get_latest_from_csv():
         "Wavelet_D4": latest["Wavelet_D4"],
         "Label": latest["Label"]
     }
-
 
 # -----------------------------------
 # Main function
