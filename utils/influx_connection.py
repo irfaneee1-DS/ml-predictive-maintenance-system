@@ -7,18 +7,7 @@ from influxdb_client_3 import InfluxDBClient3
 
 
 # -----------------------------------
-# CSV fallback configuration
-# -----------------------------------
-
-CSV_FALLBACK_PATH = (
-    Path(__file__).resolve().parent.parent
-    / "data"
-    / "dataset_from_influxdb.csv"
-)
-
-
-# -----------------------------------
-# InfluxDB Configuration
+# Configuration
 # -----------------------------------
 
 def _get_config(key, default=None):
@@ -29,13 +18,28 @@ def _get_config(key, default=None):
 
 HOST = _get_config("INFLUXDB_HOST", "http://localhost:8181")
 DATABASE = _get_config("INFLUXDB_DATABASE", "dissertation")
-TOKEN = _get_config("INFLUXDB_TOKEN") or _get_config("DB_TOKEN")
+
+TOKEN = (
+    _get_config("INFLUXDB_TOKEN")
+    or _get_config("DB_TOKEN")
+)
 
 client = None
 
 
 # -----------------------------------
-# Get Latest Sensor Features from InfluxDB
+# Bundled CSV fallback
+# -----------------------------------
+
+CSV_FALLBACK_PATH = (
+    Path(__file__).resolve().parent.parent
+    / "data"
+    / "phase1_full_dataset.csv"
+)
+
+
+# -----------------------------------
+# Get latest data from InfluxDB
 # -----------------------------------
 
 def _get_latest_from_influxdb():
@@ -60,7 +64,6 @@ def _get_latest_from_influxdb():
     """
 
     table = client.query(query=query)
-
     df = table.to_pandas()
 
     latest = df.iloc[0]
@@ -95,14 +98,14 @@ def _get_latest_from_influxdb():
 
 
 # -----------------------------------
-# CSV Fallback
+# Get fallback data from bundled CSV
 # -----------------------------------
 
 def _get_latest_from_csv():
 
     df = pd.read_csv(CSV_FALLBACK_PATH)
 
-    latest = df.sort_values("time").iloc[-1]
+    latest = df.iloc[-1]
 
     return {
         "Mean": latest["Mean"],
@@ -128,13 +131,12 @@ def _get_latest_from_csv():
         "Wavelet_D2": latest["Wavelet_D2"],
         "Wavelet_D3": latest["Wavelet_D3"],
         "Wavelet_D4": latest["Wavelet_D4"],
-        "Label": latest["Label"],
-        "Time": latest["time"]
+        "Label": latest["Label"]
     }
 
 
 # -----------------------------------
-# Main sensor-data function
+# Main function
 # -----------------------------------
 
 def get_latest_sensor_data():
