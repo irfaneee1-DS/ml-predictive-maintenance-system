@@ -1,20 +1,16 @@
-from influxdb_client_3 import InfluxDBClient3
+def _get_latest_from_influxdb():
+    global client
 
-# -----------------------------------
-# InfluxDB Configuration
-# -----------------------------------
+    if not TOKEN:
+        raise RuntimeError("InfluxDB token is not configured")
 
-HOST = "http://localhost:8181"
+    if client is None:
+        client = InfluxDBClient3(
+            host=HOST,
+            token=TOKEN,
+            database=DATABASE
+        )
 
-DATABASE = "dissertation"
-
-TOKEN = "apiv3_TwGhuFFxa-AxFzniqpdFjPwXhVFi9qYeuSHBxQ32qlmftPxm7oZSagpYTUsvmx20VjpxbUhl20gNf6W8I0WKiA"
-
-client = InfluxDBClient3(
-    host=HOST,
-    token=TOKEN,
-    database=DATABASE
-)
 
 
 # -----------------------------------
