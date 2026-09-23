@@ -1,9 +1,0 @@
-{
-    "model": "Random Forest",
-    "validation": "Source-file grouped four-fold validation",
-    "predictors": 23,
-    "accuracy": 1.0000,
-    "macro_f1": 1.0000,
-    "mcc": 1.0000,
-    "standard_deviation": 0.0000
-}
