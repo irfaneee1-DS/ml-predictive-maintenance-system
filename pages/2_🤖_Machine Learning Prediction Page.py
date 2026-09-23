@@ -1,3 +1,4 @@
+import json
 from utils.ml_model import predict_fault
 import streamlit as st
 from utils.influx_connection import get_latest_sensor_data
@@ -7,7 +8,7 @@ st.set_page_config(page_title="Machine Learning Prediction",
                    page_icon="🤖",
                    layout="wide")
 
-st.title("⚙️ Machine Learning Prediction")
+st.title("🤖 Machine Learning Prediction")
 st.write("Random Forest based bearing fault diagnosis and maintenance recommendation.")
 st.divider()
 
@@ -17,30 +18,49 @@ st.divider()
 
 model_name = "Random Forest"
 
-from utils.db import get_connection
+import sqlite3
+from pathlib import Path
+from datetime import datetime
+
+db_path = Path(__file__).parent.parent / "database" / "predictive_maintenance.db"
 
 try:
 
-    # Read latest sensor features from InfluxDB (falls back to dataset snapshot if unreachable)
+    # Read latest sensor features from InfluxDB
     latest = get_latest_sensor_data()
 
-    mean = latest["Mean"]
-    peak = latest["Peak"]
-    peak_to_peak = latest["Peak_to_Peak"]
-    rms = latest["RMS"]
-    std = latest["Std"]
+    feature_columns = [
+        "Mean",
+        "RMS",
+        "Std",
+        "Peak",
+        "Peak_to_Peak",
+        "Skewness",
+        "Kurtosis",
+        "Crest_Factor",
+        "Shape_Factor",
+        "Impulse_Factor",
+        "Spectral_Energy",
+        "Dominant_Frequency",
+        "Amp_BPFO",
+        "Amp_BPFI",
+        "Amp_BSF",
+        "BPFO_BPFI_Ratio",
+        "Band_0_500",
+        "Band_500_1000",
+        "Band_1000_2000",
+        "Wavelet_D1",
+        "Wavelet_D2",
+        "Wavelet_D3",
+        "Wavelet_D4"
+    ]
 
-    # Run Random Forest prediction
-    prediction, confidence = predict_fault(
-        mean,
-        peak,
-        peak_to_peak,
-        rms,
-        std
-    )
+    features = [latest[column] for column in feature_columns]
+
+    prediction, confidence = predict_fault(features)
 
     # Save prediction into SQLite
-    conn = get_connection()
+    conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -52,6 +72,7 @@ try:
         str(prediction),
         float(confidence)
     ))
+    prediction_id = cursor.lastrowid
 
     conn.commit()
     conn.close()
@@ -62,10 +83,11 @@ try:
     # Automatic Maintenance Work Order
     # ---------------------------------------
 
-    conn = get_connection()
+    conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
-
-    # Check for an existing open work order
+#---------------------------------------
+# Check for an existing open work order
+#---------------------------------------
     cursor.execute("""
     SELECT
         id,
@@ -82,9 +104,10 @@ try:
     """)
 
     current_work_order = cursor.fetchone()
-
-    # Create a work order only if none exists
-    if prediction != "Healthy" and current_work_order is None:
+#-------------------------------------------------------
+# Create a work order for the current prediction
+#-------------------------------------------------------
+    if prediction != "Healthy":
 
         work_order_number = "WO-" + datetime.now().strftime("%Y%m%d-%H%M%S")
 
@@ -96,21 +119,24 @@ try:
             priority,
             status,
             assigned_to,
-            created_on
+            created_on,
+            prediction_id
         )
-        VALUES (?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
         """, (
             work_order_number,
             "Bearing Assembly",
             "High",
             "Open",
             "Maintenance Team",
-            datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            prediction_id
         ))
 
         conn.commit()
-
-        # Read the newly created work order
+#------------------------------------------------------
+# Read the work order linked to the current prediction
+#------------------------------------------------------
         cursor.execute("""
         SELECT
             id,
@@ -121,16 +147,16 @@ try:
             assigned_to,
             created_on
         FROM work_orders
-        WHERE status='Open'
-        ORDER BY id DESC
+        WHERE prediction_id = ?
         LIMIT 1
-        """)
+        """, (prediction_id,))
 
         current_work_order = cursor.fetchone()
 
     conn.close()
-
-    # Always display the current work order
+#-----------------------------------------
+# Always display the current work order
+#-----------------------------------------
     if current_work_order:
 
         st.success("🔧 Maintenance Work Order Generated")
@@ -188,8 +214,9 @@ with col3:
     )
 
     st.progress(confidence / 100)
-  
+#-----------------------------------  
 # Model Information
+#-----------------------------------
 st.divider()
 
 st.header("Model Information")
@@ -199,20 +226,21 @@ st.info("""
 
 **Training Dataset:** Case Western Reserve University (CWRU) Bearing Dataset
 
-**Original Extracted Features:** 16 Statistical Vibration Features
+**Predictors Used:** 23 engineered vibration features
 
-**Selected Features Used for Prediction:**
-- Mean
-- RMS
-- Peak
-- Peak-to-Peak
-- Standard Deviation
+**Validation:** Source-file grouped four-fold validation
 
-**Feature Selection Method:** Random Forest Feature Importance Analysis
+**Model Configuration:** 200 trees, random state 42
+
+**Feature Selection:** No separate feature-selection step was applied; the final model uses the defined 23-feature predictor set.
 """)
-
+#----------------------------------------
 # Maintenance Recommendation
-st.error("🔴 High Priority Maintenance Required")
+#----------------------------------------
+if prediction == "Healthy":
+    st.success("🟢 No Immediate Maintenance Required")
+else:
+    st.error("🔴 High Priority Maintenance Required")
 # ---------------------------------------
 # Feature Values Used
 # ---------------------------------------
@@ -224,23 +252,18 @@ st.header("Feature Values Used")
 import pandas as pd
 
 feature_df = pd.DataFrame({
-    "Feature": [
-        "Mean",
-        "RMS",
-        "Peak",
-        "Peak-to-Peak",
-        "Std"
-    ],
+    "Feature": feature_columns,
     "Value": [
-        mean,
-        rms,
-        peak,
-        peak_to_peak,
-        std
+        latest[column]
+        for column in feature_columns
     ]
 })
 
-st.dataframe(feature_df, use_container_width=True)
+st.dataframe(
+    feature_df,
+    use_container_width=True,
+    hide_index=True
+)
 
 # ---------------------------------------
 # Random Forest Feature Importance
@@ -250,36 +273,55 @@ st.divider()
 
 st.header("Random Forest Feature Importance")
 
-feature_importance_df = pd.DataFrame(
-    {
-        "Importance": [
-            0.15,
-            0.22,
-            0.30,
-            0.25,
-            0.08
-        ]
-    },
-    index=[
-        "Mean",
-        "RMS",
-        "Peak",
-        "Peak-to-Peak",
-        "Std"
-    ]
+import joblib
+import matplotlib.pyplot as plt
+
+model_path = Path(__file__).parent.parent / "models" / "random_forest_23_features.pkl"
+
+rf_model = joblib.load(model_path)
+
+feature_importance_df = pd.DataFrame({
+    "Feature": feature_columns,
+    "Importance": rf_model.feature_importances_
+})
+
+# Sort from highest to lowest importance
+feature_importance_df = feature_importance_df.sort_values(
+    "Importance",
+    ascending=True
 )
 
-st.bar_chart(feature_importance_df)
+# Create horizontal bar chart
+fig, ax = plt.subplots(figsize=(10, 8))
 
+ax.barh(
+    feature_importance_df["Feature"],
+    feature_importance_df["Importance"],
+    height=0.45
+)
+
+ax.set_xlabel("Importance")
+ax.set_ylabel("Feature")
+ax.set_title("Random Forest Feature Importance")
+
+plt.tight_layout()
+
+st.pyplot(fig)
+
+plt.close(fig)
 # ---------------------------------------
 # Prediction History
 # ---------------------------------------
 
 st.header("Prediction History")
 
+import sqlite3
 import pandas as pd
+from pathlib import Path
 
-conn = get_connection()
+db_path = Path(__file__).parent.parent / "database" / "predictive_maintenance.db"
+
+conn = sqlite3.connect(db_path)
 
 history = pd.read_sql_query("""
 SELECT
@@ -308,21 +350,41 @@ st.divider()
 
 st.header("Model Performance")
 
-col1, col2, col3, col4 = st.columns(4)
+performance_path = (
+    Path(__file__).parent.parent
+    / "models"
+    / "random_forest_performance.json"
+)
+
+with open(performance_path, "r") as f:
+    performance = json.load(f)
+#st.write("DEBUG:", performance)
+
+col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.metric("Accuracy", "99.84%")
+    st.metric(
+        "Accuracy",
+        f"{performance['accuracy'] * 100:.2f}%"
+    )
 
 with col2:
-    st.metric("Precision", "99.82%")
+    st.metric(
+        "Macro F1-score",
+        f"{performance['macro_f1'] * 100:.2f}%"
+    )
 
 with col3:
-    st.metric("Recall", "99.81%")
+    st.metric(
+        "MCC",
+        f"{performance['mcc']:.4f}"
+    )
 
-with col4:
-    st.metric("F1 Score", "99.80%")
-
-st.divider()
+st.caption(
+    f"{performance['validation']} | "
+    f"{performance['predictors']} predictors | "
+    f"Fold SD: {performance['standard_deviation']:.4f}"
+)
 
 st.caption(
     "© 2026 PrediMaint AI | MSc Data Science Dissertation | Mohamed Irfan Ali | Arden University"
