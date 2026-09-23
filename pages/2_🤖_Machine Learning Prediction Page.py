@@ -22,7 +22,7 @@ import sqlite3
 from pathlib import Path
 from datetime import datetime
 
-db_path = Path(__file__).parent.parent / "database" / "predictive_maintenance.db"
+db_path = Path(__file__).parent.parent / "data" / "predictive_maintenance.db"
 
 try:
 
