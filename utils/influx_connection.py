@@ -1,3 +1,21 @@
+import os
+import streamlit as st
+from influxdb_client_3 import InfluxDBClient3
+
+# -----------------------------------
+# InfluxDB Configuration
+# -----------------------------------
+
+def _get_config(key, default=None):
+    if key in st.secrets:
+        return st.secrets[key]
+    return os.environ.get(key, default)
+
+HOST = _get_config("INFLUXDB_HOST", "http://localhost:8181")
+DATABASE = _get_config("INFLUXDB_DATABASE", "dissertation")
+TOKEN = _get_config("INFLUXDB_TOKEN") or _get_config("DB_TOKEN")
+
+client = None
 def _get_latest_from_influxdb():
     global client
 
@@ -50,3 +68,8 @@ def _get_latest_from_influxdb():
         "Label": latest["Label"],
         "Time": latest["time"]
     }
+def get_latest_sensor_data():
+    try:
+        return _get_latest_from_influxdb()
+    except Exception:
+        return _get_latest_from_csv()
