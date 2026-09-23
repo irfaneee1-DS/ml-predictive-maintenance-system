@@ -5,7 +5,7 @@ from utils.influx_connection import get_latest_sensor_data
 from datetime import datetime
 
 st.set_page_config(page_title="Machine Learning Prediction",
-                   page_icon="🤖",
+                   page_icon="⚙️",
                    layout="wide")
 
 st.title("🤖 Machine Learning Prediction")
