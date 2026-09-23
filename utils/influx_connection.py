@@ -1,4 +1,9 @@
+# -----------------------------------
+# Get Latest Sensor Features
+# -----------------------------------
+
 def _get_latest_from_influxdb():
+
     global client
 
     if not TOKEN:
@@ -10,14 +15,6 @@ def _get_latest_from_influxdb():
             token=TOKEN,
             database=DATABASE
         )
-
-
-
-# -----------------------------------
-# Get Latest Sensor Features
-# -----------------------------------
-
-def get_latest_sensor_data():
 
     query = """
     SELECT *
