@@ -29,7 +29,7 @@ latest = get_latest_sensor_data()
 if latest["Source"] == "InfluxDB (live)":
     st.success("🟢 Reading live data from InfluxDB")
 
-time = latest["Time"]
+time = latest.get("Time", "N/A")
 mean = latest["Mean"]
 peak = latest["Peak"]
 peak_to_peak = latest["Peak_to_Peak"]
