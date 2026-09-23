@@ -319,7 +319,7 @@ import sqlite3
 import pandas as pd
 from pathlib import Path
 
-db_path = Path(__file__).parent.parent / "database" / "predictive_maintenance.db"
+db_path = Path(__file__).parent.parent / "data" / "predictive_maintenance.db"
 
 conn = sqlite3.connect(db_path)
 
