@@ -93,7 +93,7 @@ def _get_latest_from_influxdb():
         "Wavelet_D3": latest["Wavelet_D3"],
         "Wavelet_D4": latest["Wavelet_D4"],
         "Label": latest["Label"],
-        "Time": latest["time"]
+        "Time": latest["time"],
         "Source": "InfluxDB (live)"
     }
 
@@ -135,7 +135,7 @@ def _get_latest_from_csv():
         "Wavelet_D2": latest["Wavelet_D2"],
         "Wavelet_D3": latest["Wavelet_D3"],
         "Wavelet_D4": latest["Wavelet_D4"],
-        "Label": latest["Label"]
+        "Label": latest["Label"],
         "Source": "CSV fallback"
     }
 
