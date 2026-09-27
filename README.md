@@ -49,7 +49,7 @@ The other pages (Work Orders, Inventory, Email, Tableau Analytics) read from the
 ## Notes
 
 - Never commit `.streamlit/secrets.toml` — it's gitignored. Only `.streamlit/secrets.toml.example` (placeholder values) is committed.
-- `models/random_forest_model.pkl` was pickled with a specific scikit-learn version; if loading it fails after deployment, retrain and re-save the model with the scikit-learn version pinned in `requirements.txt`.
+- The final deployed model is `models/random_forest_23_features.pkl`. Its feature schema is stored in `models/random_forest_23_features_columns.txt`, and the evaluation results are stored in `models/random_forest_performance.json`.
 
 ---
 
